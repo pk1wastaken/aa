@@ -1,48 +1,32 @@
-#include <iostream>
-#include <string.h>
+import java.util.Scanner;
 
-using namespace std;
-
-int crc(char *ip, char *op, char *poly, int mode)
-{
-    strcpy(op, ip);
-    if (mode) {
-        for (int i = 1; i < strlen(poly); i++)
-            strcat(op, "0");
+class CRC {
+    void div(int a[], int k) {
+        int gp[] = {1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1};
+        for (int i = 0; i < k; i++)
+            if (a[i] == gp[0])
+                for (int j = i, c = 0; j < 17 + i; j++)
+                    a[j] ^= gp[c++];
     }
-    /* Perform XOR on the msg with the selected polynomial */
-    for (int i = 0; i < strlen(ip); i++) {
-        if (op[i] == '1') {
-            for (int j = 0; j < strlen(poly); j++) {
-                if (op[i + j] == poly[j])
-                    op[i + j] = '0';
-                else
-                    op[i + j] = '1';
-            }
-        }
+
+    public static void main(String args[]) {
+        int a[] = new int[66], b[] = new int[66], len, k, f = 0;
+        PRO7 o = new PRO7();
+        Scanner s = new Scanner(System.in);
+        len = s.nextInt();
+        for (int i = 0; i < len; i++) a[i] = s.nextInt();
+        for (int i = 0; i < 16; i++) a[len++] = 0;
+        k = len - 16;
+        System.arraycopy(a, 0, b, 0, len);
+        o.div(a, k);
+        for (int i = 0; i < len; i++) a[i] ^= b[i];
+        System.out.println("Data: ");
+        for (int i = 0; i < len; i++) System.out.print(a[i] + " ");
+        System.out.println("\nEnter Received Data: ");
+        for (int i = 0; i < len; i++) a[i] = s.nextInt();
+        o.div(a, k);
+        for (int i = 0; i < len; i++) if (a[i] != 0) f = 1;
+        if (f == 1) System.out.println("error");
+        else System.out.println("no error");
     }
-    /* check for errors. return 0 if error detected */
-    for (int i = 0; i < strlen(op); i++)
-        if (op[i] == '1')
-            return 0;
-    return 1;
-}
-
-int main()
-{
-    char ip[50], op[50], recv[50];
-    char poly[] = "10001000000100001";
-
-    cout << "Enter the input message in binary"<< endl;
-    cin >> ip;
-    crc(ip, op, poly, 1);
-    cout << "The transmitted message is: " << ip << op + strlen(ip) << endl;
-    cout << "Enter the recevied message in binary" << endl;
-    cin >> recv;
-    if (crc(recv, op, poly, 0))
-        cout << "No error in data" << endl;
-    else
-        cout << "Error in data transmission has occurred" << endl;
-
-    return 0;
 }
